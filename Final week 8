@@ -1,0 +1,235 @@
+#include<iostream>
+#include<map>
+#include<string>
+#include<fstream>
+#include <limits>
+
+
+
+
+// main menu
+void userMenu(){
+    std::cout << "========" <<std::endl;
+ 	std::cout <<  "1.User"  << std::endl;
+ 	std::cout <<  "2.Admin" << std::endl;
+ 	std::cout <<  "3.exit"  << std::endl;
+ 	std::cout << "========" <<std::endl;
+}
+
+void clearScreen(){
+	std::cout << "";
+}
+
+int listJudul_film(){
+	std::map<int,std::string> judulFilm;
+
+	judulFilm[1] = "Vanitas No Carte";
+	judulFilm[2] = "Raku Daiki Shino Calvary";
+	judulFilm[3] = "Kino No Tabi";
+	judulFilm[4] = "Fate Stay Night";
+	std::cout << "Judul Film : " << std::endl;
+	for(const auto& pair : judulFilm){
+		std::cout << pair.first << "." << pair.second << std::endl;
+	}
+	std::cout << "0.Kembali" << std::endl;
+	return judulFilm.size();
+}
+void catatan_pembelian(int id , std::string nama_pembeli){
+	std::string namaFile = "Log_pembelian";
+	std::string finallNamaFile = namaFile + std::to_string(id)+".txt";
+
+	std::ofstream outputFile(finallNamaFile,std::ios::app);
+	if(outputFile.is_open()){
+		outputFile << nama_pembeli << "\n";
+
+		outputFile.close();
+	}
+	return;
+}
+
+void userMain(){
+	int menu_select,jumlah_film,jumlah_pembelian,pembayaran,total_harga;
+	int harga_tiket = 50000;
+	std::string nama_pembeli;
+	bool status = true;
+	while(status){
+		try{
+			jumlah_film = listJudul_film();
+			if(!(std::cin >> menu_select)){
+				throw std::runtime_error("Inputan kurang tepat");
+			}
+			if(menu_select == 0){
+				return;
+			}
+			if(menu_select > jumlah_film){
+				throw std::runtime_error("Inputan Tidak di temukan");
+			}
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+			clearScreen();
+			std::cout << "Untuk Berapa orang ? " << std::endl;
+			if(!(std::cin >> jumlah_pembelian)){
+				throw std::runtime_error("Inputan Salah");
+			}
+			if(jumlah_pembelian > 3 ){
+				throw std::runtime_error("Tidak boleh melebihi 3 orang");
+			}
+
+			clearScreen();
+			total_harga = harga_tiket * jumlah_pembelian;
+			std::cout << "Total Harga Yang harus di bayar : " << total_harga << std::endl;
+			std::cout << "Masukan nominal uang : ";
+
+			if(!(std::cin >> pembayaran)){
+				throw std::runtime_error("Input Salah");
+			}
+			if(pembayaran < total_harga){
+				throw std::runtime_error("Uang kurang");
+			}
+			std::cout << std::endl;
+			int kembalian = pembayaran - total_harga;
+			std::cout << "Kembaliannya " << kembalian << std::endl;
+			std::cin.ignore();
+			for(int i=0 ; i < jumlah_pembelian ; i++){
+				std::cout << "Masukan nama pembeli ke " << i + 1 << std::endl;
+				if(!(std::getline(std::cin,nama_pembeli))){
+					throw std::runtime_error("inputan tidak sesuai");
+				}
+				catatan_pembelian(menu_select,nama_pembeli);
+			}
+			clearScreen();
+			std::cout << "Terimakasih sudah melakukan pembelian" << std::endl;
+			std::cin.get();
+
+			status = false;
+		}catch(const std::exception& e){
+			clearScreen();
+			std::cerr << "Error: " << e.what() << std::endl;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            status = true;
+		}
+	}
+}
+
+
+bool list_pembeli_berdasarkan_id_film(int id){
+	int select;
+	std::string namaFile = "Log_pembelian";
+	std::string finallNamaFile = namaFile + std::to_string(id)+".txt";
+	std::ifstream openFile (finallNamaFile,std::ifstream::in);
+	if(openFile.is_open()){
+		std::cout << "List nama Pengunjung yang membeli berdasarkan id film " << id << std::endl;
+		std::string name;
+		while(std::getline(openFile,name)) {
+			std::cout << name << std::endl;
+		}
+		return true;
+	}else{
+		return false;
+	}
+}
+
+void loginAdmin(){
+	int menu_select,jumlah_film;
+	bool value_exit;
+	std::string username = "eka";
+	std::string password = "12345678";
+	std::string input_username;
+	std::string input_password;
+	bool status = true;
+	while(status){
+
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		try{
+			std::cout << "Username : ";
+			if (!(std::getline(std::cin, input_username))) {
+    				throw std::runtime_error("inputan tidak sesuai");
+			}
+			std::cout << "Password : ";
+			if (!(std::getline(std::cin, input_password))) {
+    				throw std::runtime_error("inputan tidak sesuai");
+			}
+
+			if(username == input_username && password == input_password){
+				clearScreen();
+				jumlah_film = listJudul_film();
+				if(!(std::cin >> menu_select)){
+					throw std::runtime_error("Inputan kurang tepat");
+				}
+				if(menu_select == 0){
+					return;
+				}
+				if(menu_select > jumlah_film){
+					throw std::runtime_error("Inputan Tidak di temukan");
+				}
+				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				value_exit = list_pembeli_berdasarkan_id_film(menu_select);
+				if(value_exit == false){
+					std::cout << "Tidak ada pembeli yang masuk " << std::endl;
+					std::cout << "tekan enter untuk kembali ke menu awal" << std::endl;
+					std::cin.get();
+				}else{
+					std::cout << "tekan enter untuk kembali ke menu awal" << std::endl;
+					std::cin.get();
+				}
+
+				status = false;
+			}else{
+				std::cout << "User dan password salah" << std::endl;
+				status = true;
+			}
+		}catch(const std::exception& e){
+			clearScreen();
+			std::cerr << "Error: " << e.what() << std::endl;
+            std::cin.clear(); // Reset status error dari cin
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            status = true;
+		}
+	}
+}
+
+
+int main(){
+	int menu_select = 3 ;
+	bool aplikasi_status = true;
+	while(aplikasi_status){
+		try{
+			aplikasi_status = false;
+			clearScreen();
+			userMenu();
+			if (!(std::cin >> menu_select)) {
+            	throw std::runtime_error("Input tidak valid. Harap masukkan bilangan bulat.");
+        	}
+
+			switch(menu_select){
+				case 1:
+					clearScreen();
+					userMain();
+					aplikasi_status = true;
+				break;
+
+				case 2:
+					clearScreen();
+					loginAdmin();
+					aplikasi_status = true;
+				break;
+				case 3:
+					clearScreen();
+					aplikasi_status = false;
+					return 0;
+				break;
+				default:
+					std::cout << "Inputan tidak di temukan" << std::endl;
+					aplikasi_status = true;
+				break;
+			}
+		}catch(const std::exception& e){
+			std::cerr << "Error: " << e.what() << std::endl;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            aplikasi_status = true;
+		}
+	}
+	return 0;
+}
